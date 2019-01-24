@@ -78,6 +78,7 @@ func column(t *testing.T, v interface{}) *spanner.GenericColumnValue {
 }
 
 func date(t *testing.T, s string) civil.Date {
+	t.Helper()
 	d, err := civil.ParseDate(s)
 	if err != nil {
 		t.Fatal("unexpected error", err)
@@ -86,6 +87,7 @@ func date(t *testing.T, s string) civil.Date {
 }
 
 func timestamp(t *testing.T, s string) time.Time {
+	t.Helper()
 	tm, err := time.Parse(time.RFC3339, s)
 	if err != nil {
 		t.Fatal("unexpected error", err)
