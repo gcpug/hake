@@ -26,6 +26,7 @@ func (r *Row) MarshalJSON() ([]byte, error) {
 	return json.Marshal(m)
 }
 
+// Rows convert []*spanner.Row to []*Row.
 func Rows(rows []*spanner.Row) []*Row {
 	if rows == nil {
 		return nil

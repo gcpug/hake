@@ -1,6 +1,7 @@
 package sgcvj
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"strconv"
@@ -58,6 +59,8 @@ func (c *Column) marshal(t *gspanner.Type, v *structpb.Value) (interface{}, erro
 		return d, nil
 	case gspanner.TypeCode_TIMESTAMP:
 		return time.Parse(time.RFC3339, v.GetStringValue())
+	case gspanner.TypeCode_BYTES:
+		return base64.StdEncoding.DecodeString(v.GetStringValue())
 	}
 	return nil, fmt.Errorf("unsupport type: type:%v value:%T", t, v.Kind)
 }
