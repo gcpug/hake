@@ -59,7 +59,7 @@ func (c *Column) marshal(t *gspanner.Type, v *structpb.Value) (interface{}, erro
 	case gspanner.TypeCode_TIMESTAMP:
 		return time.Parse(time.RFC3339, v.GetStringValue())
 	}
-	return nil, fmt.Errorf("unsupport type: %T", v.Kind)
+	return nil, fmt.Errorf("unsupport type: type:%v value:%T", t, v.Kind)
 }
 
 func (c *Column) marshalStruct(t *gspanner.StructType, fs *structpb.ListValue) (map[string]interface{}, error) {
