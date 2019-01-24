@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"strconv"
+	"time"
 
+	"cloud.google.com/go/civil"
 	"cloud.google.com/go/spanner"
 	structpb "github.com/golang/protobuf/ptypes/struct"
 	gspanner "google.golang.org/genproto/googleapis/spanner/v1"
@@ -27,6 +29,7 @@ func (c *Column) marshal(t *gspanner.Type, v *structpb.Value) (interface{}, erro
 		return nil, nil
 	}
 
+	// See: https://godoc.org/google.golang.org/genproto/googleapis/spanner/v1#TypeCode
 	switch t.Code {
 	case gspanner.TypeCode_INT64:
 		s := v.GetStringValue()
@@ -45,6 +48,14 @@ func (c *Column) marshal(t *gspanner.Type, v *structpb.Value) (interface{}, erro
 		return c.marshalStruct(t.GetStructType(), v.GetListValue())
 	case gspanner.TypeCode_ARRAY:
 		return c.marshalList(t.GetArrayElementType(), v.GetListValue())
+	case gspanner.TypeCode_DATE:
+		d, err := civil.ParseDate(v.GetStringValue())
+		if err != nil {
+			return nil, err
+		}
+		return d, nil
+	case gspanner.TypeCode_TIMESTAMP:
+		return time.Parse(time.RFC3339, v.GetStringValue())
 	}
 	return nil, fmt.Errorf("unsupport type: %T", v.Kind)
 }

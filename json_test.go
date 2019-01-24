@@ -4,7 +4,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"testing"
+	"time"
 
+	"cloud.google.com/go/civil"
 	"cloud.google.com/go/spanner"
 	"github.com/sinmetal/sgcvj"
 )
@@ -31,6 +33,8 @@ func TestColumn_MarshalJSON(t *testing.T) {
 		{"bool", column(t, true), toJSON(t, true)},
 		{"struct", column(t, T{N: 100, S: "test"}), toJSON(t, T{N: 100, S: "test"})},
 		{"nested struct", column(t, NT{T{N: 100, S: "test"}}), toJSON(t, NT{T{N: 100, S: "test"}})},
+		{"timestamp", column(t, timestamp(t, "2002-10-02T10:00:00Z")), toJSON(t, "2002-10-02T10:00:00Z")},
+		{"date", column(t, date(t, "1986-01-12")), toJSON(t, "1986-01-12")},
 	}
 
 	for _, tt := range cases {
@@ -71,4 +75,22 @@ func column(t *testing.T, v interface{}) *spanner.GenericColumnValue {
 	}
 
 	return &col
+}
+
+func date(t *testing.T, s string) civil.Date {
+	t.Helper()
+	d, err := civil.ParseDate(s)
+	if err != nil {
+		t.Fatal("unexpected error", err)
+	}
+	return d
+}
+
+func timestamp(t *testing.T, s string) time.Time {
+	t.Helper()
+	tm, err := time.Parse(time.RFC3339, s)
+	if err != nil {
+		t.Fatal("unexpected error", err)
+	}
+	return tm
 }
