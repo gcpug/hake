@@ -31,7 +31,7 @@ func TestColumn_MarshalJSON(t *testing.T) {
 		{"struct", column(t, T{N: 100, S: "test"}), toJSON(t, T{N: 100, S: "test"})},
 		{"nested struct", column(t, NT{T{N: 100, S: "test"}}), toJSON(t, NT{T{N: 100, S: "test"}})},
 		{"timestamp", column(t, timestamp(t, "2002-10-02T10:00:00Z")), toJSON(t, "2002-10-02T10:00:00Z")},
-		{"date", column(t, date(t, "1986-01-12")), toJSON(t, "1986-01-12")},
+		{"bytes", column(t, []byte("test")), toJSON(t, []byte("test"))},
 	}
 
 	for _, tt := range cases {
