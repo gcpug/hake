@@ -1,60 +1,64 @@
-package sgcvj
+package sgcvj_test
 
 import (
+	"bytes"
 	"encoding/json"
-	"fmt"
 	"testing"
 
 	"cloud.google.com/go/spanner"
-	"github.com/google/go-cmp/cmp"
 )
 
-func TestJsonMarshal(t *testing.T) {
-	type H struct {
-		Text   string
-		Number int
+func TestColumn_MarshalJSON(t *testing.T) {
+
+	type T struct {
+		N int
+		S string
 	}
 
-	columns := []string{"Message", "Array", "Struct"}
-	a := []string{"v1", "v2"}
-	h := H{Text: "hello struct", Number: 101}
-	row, err := spanner.NewRow(columns, []interface{}{"hello world", a, h})
+	type NT struct {
+		T T
+	}
+
+	cases := []struct {
+		name     string
+		col      *spanner.GenericColumnValue
+		expected string
+	}{
+		{"int", column(t, 100), toJSON(t, 100)},
+		{"float", column(t, 10.5), toJSON(t, 10.5)},
+		{"string", column(t, "test"), toJSON(t, "test")},
+		{"bool", column(t, true), toJSON(t, true)},
+		{"struct", column(t, T{N: 100, S: "test"}), toJSON(t, T{N: 100, S: "test"})},
+		{"nested struct", column(t, NT{T{N: 100, S: "test"}}), toJSON(t, NT{T{N: 100, S: "test"}})},
+	}
+
+	for _, tt := range cases {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+		})
+	}
+}
+
+func toJSON(t *testing.T, v interface{}) string {
+	t.Helper()
+	var buf bytes.Buffer
+	if err := json.NewEncoder(&buf).Encode(v); err != nil {
+		t.Fatal("unexpected error", err)
+	}
+	return buf.String()
+}
+
+func column(t *testing.T, v interface{}) *spanner.GenericColumnValue {
+	t.Helper()
+	row, err := spanner.NewRow([]string{"col"}, []interface{}{v})
 	if err != nil {
-		t.Fatal(err)
+		t.Fatal("unexpected error", err)
 	}
 
-	m := map[string]ColumnValue{}
-	for _, column := range columns {
-		var v spanner.GenericColumnValue
-		if err := row.ColumnByName(column, &v); err != nil {
-			t.Fatalf("failed row.ColumnByName. column=%s, err=%+v", column, err)
-		}
-		m[column] = ColumnValue(v)
+	var col spanner.GenericColumnValue
+	if err := row.Column(0, &col); err != nil {
+		t.Fatal("unexpected error", err)
 	}
 
-	b, err := json.Marshal(m)
-	if err != nil {
-		t.Fatalf("failed json.Marshal. err=%+v", err)
-	}
-	fmt.Printf("%s\n", string(b))
-
-	type Response struct {
-		Message string
-		Array   []string
-		H       H
-	}
-	var res Response
-	if err := json.Unmarshal(b, &res); err != nil {
-		t.Fatalf("failed json.Unmarshal. err=%+v", err)
-	}
-
-	if e, g := "hello world", res.Message; e != g {
-		t.Fatalf("Message expected %v, got %v", e, g)
-	}
-	if e, g := a, res.Array; cmp.Equal(e, g) == false {
-		t.Fatalf("Array expected %v, got %v", e, g)
-	}
-	if e, g := h, res.H; cmp.Equal(e, g) == false {
-		t.Fatalf("Struct expected %v, got %v", e, g)
-	}
+	return &col
 }
