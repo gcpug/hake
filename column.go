@@ -12,10 +12,12 @@ import (
 	gspanner "google.golang.org/genproto/googleapis/spanner/v1"
 )
 
+// Column is an encodable type of spanner.GenericColumnValue.
 type Column spanner.GenericColumnValue
 
 var _ json.Marshaler = (*Column)(nil)
 
+// MarshalJSON implements json.Marshaler
 func (c *Column) MarshalJSON() ([]byte, error) {
 	v, err := c.marshal(c.Type, c.Value)
 	if err != nil {
