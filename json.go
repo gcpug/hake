@@ -3,9 +3,11 @@ package sgcvj
 import (
 	"encoding/json"
 	"fmt"
+	"strconv"
 
 	"cloud.google.com/go/spanner"
 	structpb "github.com/golang/protobuf/ptypes/struct"
+	gspanner "google.golang.org/genproto/googleapis/spanner/v1"
 )
 
 type Column spanner.GenericColumnValue
@@ -13,50 +15,59 @@ type Column spanner.GenericColumnValue
 var _ json.Marshaler = (*Column)(nil)
 
 func (c *Column) MarshalJSON() ([]byte, error) {
-	v, err := c.marshal(c.Value)
+	v, err := c.marshal(c.Type, c.Value)
 	if err != nil {
 		return nil, err
 	}
 	return json.Marshal(v)
 }
 
-func (c *Column) marshal(v *structpb.Value) (interface{}, error) {
-	switch v.Kind.(type) {
-	case *structpb.Value_NullValue:
+func (c *Column) marshal(t *gspanner.Type, v *structpb.Value) (interface{}, error) {
+	if _, isNull := v.Kind.(*structpb.Value_NullValue); isNull {
 		return nil, nil
-	case *structpb.Value_NumberValue:
+	}
+
+	switch t.Code {
+	case gspanner.TypeCode_INT64:
+		s := v.GetStringValue()
+		n, err := strconv.ParseInt(s, 10, 64)
+		if err != nil {
+			return nil, err
+		}
+		return n, nil
+	case gspanner.TypeCode_FLOAT64:
 		return v.GetNumberValue(), nil
-	case *structpb.Value_StringValue:
+	case gspanner.TypeCode_STRING:
 		return v.GetStringValue(), nil
-	case *structpb.Value_BoolValue:
+	case gspanner.TypeCode_BOOL:
 		return v.GetBoolValue(), nil
-	case *structpb.Value_StructValue:
-		return c.marshalStruct(v.GetStructValue())
-	case *structpb.Value_ListValue:
-		return c.marshalList(v.GetListValue())
+	case gspanner.TypeCode_STRUCT:
+		return c.marshalStruct(t.GetStructType(), v.GetListValue())
+	case gspanner.TypeCode_ARRAY:
+		return c.marshalList(t.GetArrayElementType(), v.GetListValue())
 	}
 	return nil, fmt.Errorf("unsupport type: %T", v.Kind)
 }
 
-func (c *Column) marshalStruct(s *structpb.Struct) (map[string]interface{}, error) {
-	m := make(map[string]interface{}, len(s.Fields))
+func (c *Column) marshalStruct(t *gspanner.StructType, fs *structpb.ListValue) (map[string]interface{}, error) {
+	m := make(map[string]interface{}, len(fs.Values))
 
-	for n := range s.Fields {
-		v, err := c.marshal(s.Fields[n])
+	for i := range fs.Values {
+		v, err := c.marshal(t.Fields[i].Type, fs.Values[i])
 		if err != nil {
 			return nil, err
 		}
-		m[n] = v
+		m[t.Fields[i].Name] = v
 	}
 
 	return m, nil
 }
 
-func (c *Column) marshalList(l *structpb.ListValue) ([]interface{}, error) {
+func (c *Column) marshalList(t *gspanner.Type, l *structpb.ListValue) ([]interface{}, error) {
 	vs := make([]interface{}, len(l.Values))
 
 	for i := range l.Values {
-		v, err := c.marshal(l.Values[i])
+		v, err := c.marshal(t, l.Values[i])
 		if err != nil {
 			return nil, err
 		}
