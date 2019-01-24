@@ -29,6 +29,7 @@ func (c *Column) marshal(t *gspanner.Type, v *structpb.Value) (interface{}, erro
 		return nil, nil
 	}
 
+	// See: https://godoc.org/google.golang.org/genproto/googleapis/spanner/v1#TypeCode
 	switch t.Code {
 	case gspanner.TypeCode_INT64:
 		s := v.GetStringValue()
