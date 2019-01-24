@@ -1,12 +1,8 @@
 package sgcvj_test
 
 import (
-	"bytes"
-	"encoding/json"
 	"testing"
-	"time"
 
-	"cloud.google.com/go/civil"
 	"cloud.google.com/go/spanner"
 	"github.com/sinmetal/sgcvj"
 )
@@ -27,6 +23,7 @@ func TestColumn_MarshalJSON(t *testing.T) {
 		col  *spanner.GenericColumnValue
 		want string
 	}{
+		{"null", column(t, nil), toJSON(t, nil)},
 		{"int", column(t, 100), toJSON(t, 100)},
 		{"float", column(t, 10.5), toJSON(t, 10.5)},
 		{"string", column(t, "test"), toJSON(t, "test")},
@@ -51,46 +48,4 @@ func TestColumn_MarshalJSON(t *testing.T) {
 			}
 		})
 	}
-}
-
-func toJSON(t *testing.T, v interface{}) string {
-	t.Helper()
-	var buf bytes.Buffer
-	if err := json.NewEncoder(&buf).Encode(v); err != nil {
-		t.Fatal("unexpected error", err)
-	}
-	return buf.String()
-}
-
-func column(t *testing.T, v interface{}) *spanner.GenericColumnValue {
-	t.Helper()
-	row, err := spanner.NewRow([]string{"col"}, []interface{}{v})
-	if err != nil {
-		t.Fatal("unexpected error", err)
-	}
-
-	var col spanner.GenericColumnValue
-	if err := row.Column(0, &col); err != nil {
-		t.Fatal("unexpected error", err)
-	}
-
-	return &col
-}
-
-func date(t *testing.T, s string) civil.Date {
-	t.Helper()
-	d, err := civil.ParseDate(s)
-	if err != nil {
-		t.Fatal("unexpected error", err)
-	}
-	return d
-}
-
-func timestamp(t *testing.T, s string) time.Time {
-	t.Helper()
-	tm, err := time.Parse(time.RFC3339, s)
-	if err != nil {
-		t.Fatal("unexpected error", err)
-	}
-	return tm
 }
