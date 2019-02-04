@@ -1,4 +1,4 @@
-package sgcvj
+package hake
 
 import (
 	"encoding/json"
@@ -6,13 +6,13 @@ import (
 	"cloud.google.com/go/spanner"
 )
 
-// Row is an encodable type of spanner.Row.
-type Row spanner.Row
+// JSONRow is an encodable type of spanner.Row.
+type JSONRow spanner.Row
 
-var _ json.Marshaler = (*Row)(nil)
+var _ json.Marshaler = (*JSONRow)(nil)
 
 // MarshalJSON implements json.Marshaler
-func (r *Row) MarshalJSON() ([]byte, error) {
+func (r *JSONRow) MarshalJSON() ([]byte, error) {
 	row := (*spanner.Row)(r)
 	names := row.ColumnNames()
 	m := make(map[string]interface{}, len(names))
@@ -21,20 +21,20 @@ func (r *Row) MarshalJSON() ([]byte, error) {
 		if err := row.ColumnByName(n, &col); err != nil {
 			return nil, err
 		}
-		m[n] = (*Column)(&col)
+		m[n] = (*JSONColumn)(&col)
 	}
 	return json.Marshal(m)
 }
 
 // Rows convert []*spanner.Row to []*Row.
-func Rows(rows []*spanner.Row) []*Row {
+func JSONRows(rows []*spanner.Row) []*JSONRow {
 	if rows == nil {
 		return nil
 	}
 
-	rs := make([]*Row, len(rows))
+	rs := make([]*JSONRow, len(rows))
 	for i := range rows {
-		rs[i] = (*Row)(rows[i])
+		rs[i] = (*JSONRow)(rows[i])
 	}
 
 	return rs

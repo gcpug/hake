@@ -1,12 +1,10 @@
-package sgcvj_test
+package hake_test
 
 import (
 	"bytes"
 	"encoding/json"
 	"testing"
-	"time"
 
-	"cloud.google.com/go/civil"
 	"cloud.google.com/go/spanner"
 )
 
@@ -37,24 +35,6 @@ func column(t *testing.T, v interface{}) *spanner.GenericColumnValue {
 	}
 
 	return &col
-}
-
-func date(t *testing.T, s string) civil.Date {
-	t.Helper()
-	d, err := civil.ParseDate(s)
-	if err != nil {
-		t.Fatal("unexpected error", err)
-	}
-	return d
-}
-
-func timestamp(t *testing.T, s string) time.Time {
-	t.Helper()
-	tm, err := time.Parse(time.RFC3339, s)
-	if err != nil {
-		t.Fatal("unexpected error", err)
-	}
-	return tm
 }
 
 // R is Row.

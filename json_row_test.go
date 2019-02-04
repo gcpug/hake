@@ -1,13 +1,13 @@
-package sgcvj_test
+package hake_test
 
 import (
 	"testing"
 
 	"cloud.google.com/go/spanner"
-	"github.com/sinmetal/sgcvj"
+	. "github.com/sinmetal/hake"
 )
 
-func TestRow_MarshalJSON(t *testing.T) {
+func TestJSONRow_MarshalJSON(t *testing.T) {
 
 	cases := []struct {
 		name string
@@ -28,7 +28,7 @@ func TestRow_MarshalJSON(t *testing.T) {
 					t.Errorf("unexpected panic: %v", r)
 				}
 			}()
-			got := toJSON(t, (*sgcvj.Row)(tt.row))
+			got := toJSON(t, (*JSONRow)(tt.row))
 			if got != tt.want {
 				t.Errorf("want %s but got %s", tt.want, got)
 			}
@@ -56,7 +56,7 @@ func TestRows(t *testing.T) {
 					t.Errorf("unexpected panic: %v", r)
 				}
 			}()
-			got := toJSON(t, sgcvj.Rows(tt.rows))
+			got := toJSON(t, JSONRows(tt.rows))
 			if got != tt.want {
 				t.Errorf("want %s but got %s", tt.want, got)
 			}

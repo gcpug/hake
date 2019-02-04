@@ -1,10 +1,10 @@
-package sgcvj_test
+package hake_test
 
 import (
 	"testing"
 
 	"cloud.google.com/go/spanner"
-	"github.com/sinmetal/sgcvj"
+	. "github.com/sinmetal/hake"
 )
 
 func TestColumn_MarshalJSON(t *testing.T) {
@@ -42,7 +42,7 @@ func TestColumn_MarshalJSON(t *testing.T) {
 					t.Errorf("unexpected panic: %v", r)
 				}
 			}()
-			got := toJSON(t, (*sgcvj.Column)(tt.col))
+			got := toJSON(t, (*JSONColumn)(tt.col))
 			if got != tt.want {
 				t.Errorf("want %s but got %s", tt.want, got)
 			}

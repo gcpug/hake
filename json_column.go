@@ -1,4 +1,4 @@
-package sgcvj
+package hake
 
 import (
 	"encoding/base64"
@@ -13,13 +13,13 @@ import (
 	gspanner "google.golang.org/genproto/googleapis/spanner/v1"
 )
 
-// Column is an encodable type of spanner.GenericColumnValue.
-type Column spanner.GenericColumnValue
+// JSONColumn is an encodable type of spanner.GenericColumnValue.
+type JSONColumn spanner.GenericColumnValue
 
-var _ json.Marshaler = (*Column)(nil)
+var _ json.Marshaler = (*JSONColumn)(nil)
 
 // MarshalJSON implements json.Marshaler
-func (c *Column) MarshalJSON() ([]byte, error) {
+func (c *JSONColumn) MarshalJSON() ([]byte, error) {
 	v, err := c.marshal(c.Type, c.Value)
 	if err != nil {
 		return nil, err
@@ -27,7 +27,7 @@ func (c *Column) MarshalJSON() ([]byte, error) {
 	return json.Marshal(v)
 }
 
-func (c *Column) marshal(t *gspanner.Type, v *structpb.Value) (interface{}, error) {
+func (c *JSONColumn) marshal(t *gspanner.Type, v *structpb.Value) (interface{}, error) {
 	if _, isNull := v.Kind.(*structpb.Value_NullValue); isNull {
 		return nil, nil
 	}
@@ -65,7 +65,7 @@ func (c *Column) marshal(t *gspanner.Type, v *structpb.Value) (interface{}, erro
 	return nil, fmt.Errorf("unsupport type: type:%v value:%T", t, v.Kind)
 }
 
-func (c *Column) marshalStruct(t *gspanner.StructType, fs *structpb.ListValue) (map[string]interface{}, error) {
+func (c *JSONColumn) marshalStruct(t *gspanner.StructType, fs *structpb.ListValue) (map[string]interface{}, error) {
 	m := make(map[string]interface{}, len(fs.Values))
 
 	for i := range fs.Values {
@@ -79,7 +79,7 @@ func (c *Column) marshalStruct(t *gspanner.StructType, fs *structpb.ListValue) (
 	return m, nil
 }
 
-func (c *Column) marshalList(t *gspanner.Type, l *structpb.ListValue) ([]interface{}, error) {
+func (c *JSONColumn) marshalList(t *gspanner.Type, l *structpb.ListValue) ([]interface{}, error) {
 	vs := make([]interface{}, len(l.Values))
 
 	for i := range l.Values {
