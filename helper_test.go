@@ -1,4 +1,4 @@
-package sgcvj_test
+package hake_test
 
 import (
 	"bytes"
