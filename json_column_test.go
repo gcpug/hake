@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"cloud.google.com/go/spanner"
-	"github.com/gcpug/hake"
+	. "github.com/gcpug/hake"
 )
 
 func TestColumn_MarshalJSON(t *testing.T) {
@@ -42,7 +42,7 @@ func TestColumn_MarshalJSON(t *testing.T) {
 					t.Errorf("unexpected panic: %v", r)
 				}
 			}()
-			got := toJSON(t, (*hake.Column)(tt.col))
+			got := toJSON(t, (*JSONColumn)(tt.col))
 			if got != tt.want {
 				t.Errorf("want %s but got %s", tt.want, got)
 			}
