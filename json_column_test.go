@@ -4,7 +4,7 @@ import (
 	"testing"
 
 	"cloud.google.com/go/spanner"
-	. "github.com/sinmetal/hake"
+	. "github.com/gcpug/hake"
 )
 
 func TestColumn_MarshalJSON(t *testing.T) {
