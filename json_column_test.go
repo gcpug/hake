@@ -37,11 +37,6 @@ func TestColumn_MarshalJSON(t *testing.T) {
 	for _, tt := range cases {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
-			defer func() {
-				if r := recover(); r != nil {
-					t.Errorf("unexpected panic: %v", r)
-				}
-			}()
 			got := toJSON(t, (*JSONColumn)(tt.col))
 			if got != tt.want {
 				t.Errorf("want %s but got %s", tt.want, got)
