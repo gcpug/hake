@@ -1,9 +1,9 @@
 package hake
 
 import (
-	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"path"
 	"strconv"
 	"time"
 
@@ -60,7 +60,7 @@ func (c *JSONColumn) marshal(t *gspanner.Type, v *structpb.Value) (interface{}, 
 	case gspanner.TypeCode_TIMESTAMP:
 		return time.Parse(time.RFC3339, v.GetStringValue())
 	case gspanner.TypeCode_BYTES:
-		return base64.StdEncoding.DecodeString(v.GetStringValue())
+		return v.GetStringValue(), nil
 	}
 	return nil, fmt.Errorf("unsupport type: type:%v value:%T", t, v.Kind)
 }
@@ -91,4 +91,93 @@ func (c *JSONColumn) marshalList(t *gspanner.Type, l *structpb.ListValue) ([]int
 	}
 
 	return vs, nil
+}
+
+func (c *JSONColumn) schema(o JSONObject, t *gspanner.Type, options ...JSONSchemaOption) error {
+
+	switch t.Code {
+	default:
+		return fmt.Errorf("unsupport type: type:%v", t)
+	case gspanner.TypeCode_INT64, gspanner.TypeCode_FLOAT64:
+		o.Set("type", "number")
+	case gspanner.TypeCode_STRING:
+		o.Set("type", "string")
+	case gspanner.TypeCode_BOOL:
+		o.Set("type", "boolean")
+	case gspanner.TypeCode_DATE:
+		o.Set("type", "string")
+		o.Set("format", "date")
+	case gspanner.TypeCode_TIMESTAMP:
+		o.Set("type", "string")
+		o.Set("format", "datetime")
+	case gspanner.TypeCode_BYTES:
+		o.Set("type", "string")
+		o.Set("format", "textarea")
+	case gspanner.TypeCode_STRUCT:
+		if err := c.schemaStruct(o, t.GetStructType()); err != nil {
+			return err
+		}
+	case gspanner.TypeCode_ARRAY:
+		if err := c.schemaArray(o, t.GetArrayElementType()); err != nil {
+			return err
+		}
+	}
+
+	for i := range options {
+		if err := (options[i])(o); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (c *JSONColumn) schemaStruct(parent JSONObject, t *gspanner.StructType, options ...JSONSchemaOption) error {
+
+	required := make([]string, len(t.Fields))
+	properties := make(map[string]interface{}, len(t.Fields))
+
+	for i, f := range t.Fields {
+
+		required[i] = f.Name
+
+		o := &mapJSONObject{
+			m:   map[string]interface{}{},
+			ref: path.Join(parent.Ref(), "properties", f.Name),
+		}
+
+		opts := make([]JSONSchemaOption, len(options)+1)
+		copy(opts, options)
+		opts[len(opts)-1] = ByJSONReference(o.Ref(), PropertyOrder(i))
+
+		if err := c.schema(o, f.Type, opts...); err != nil {
+			return err
+		}
+
+		properties[f.Name] = o.m
+	}
+
+	parent.Set("type", "object")
+	parent.Set("required", required)
+	parent.Set("properties", properties)
+
+	return nil
+}
+
+func (c *JSONColumn) schemaArray(parent JSONObject, t *gspanner.Type, options ...JSONSchemaOption) error {
+
+	o := &mapJSONObject{
+		m:   map[string]interface{}{},
+		ref: path.Join(parent.Ref(), "items"),
+	}
+
+	if err := c.schema(o, t, options...); err != nil {
+		return err
+	}
+
+	parent.Set("type", "array")
+	parent.Set("format", "table")
+	parent.Set("items", o.m)
+
+	return nil
 }
