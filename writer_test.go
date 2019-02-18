@@ -44,9 +44,8 @@ func TestWriter_Write(t *testing.T) {
 				rw.err = errors.New("error")
 			}
 
-			w := hake.NewWriter(&rw)
-			w.Write(tt.row)
-			switch err := w.Error(); {
+			w := hake.NewWriter(&rw, false)
+			switch err := w.Write(tt.row); {
 			case tt.hasErr && err == nil:
 				t.Errorf("expected error does not occur")
 			case !tt.hasErr && err != nil:

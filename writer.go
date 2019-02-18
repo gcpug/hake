@@ -1,6 +1,7 @@
 package hake
 
 import (
+	"encoding/csv"
 	"fmt"
 	"strconv"
 
@@ -9,55 +10,93 @@ import (
 	gspanner "google.golang.org/genproto/googleapis/spanner/v1"
 )
 
-// RecordWriter writes recod.
+// RecordWriter writes a record.
+// csv.Writer implements RecordWriter.
 type RecordWriter interface {
 	Write(record []string) error
 }
 
-// WriteHeaderTo is writes the row to the writer w as a header.
-func WriteHeaderTo(w RecordWriter, row *spanner.Row) error {
-	cw := NewWriter(w)
-	cw.WriteHeader(row)
-	return cw.Error()
-}
-
-// WriteHeaderTo is writes values of the row to the writer w.
-func WriteTo(w RecordWriter, row *spanner.Row) error {
-	cw := NewWriter(w)
-	cw.Write(row)
-	return cw.Error()
-}
+var _ RecordWriter = (*csv.Writer)(nil)
 
 // Writer is writes *spanner.Row to Recordwriter.
 type Writer struct {
-	err error
-	w   RecordWriter
+	w      RecordWriter
+	header bool
 }
 
 // NewWriter creates a Writer.
-func NewWriter(w RecordWriter) *Writer {
-	return &Writer{w: w}
+func NewWriter(w RecordWriter, header bool) *Writer {
+	return &Writer{
+		w:      w,
+		header: header,
+	}
 }
 
-// Error returns occured error.
-func (w *Writer) Error() error {
-	return w.err
-}
-
-// WriteHeader writes a header.
-func (w *Writer) WriteHeader(row *spanner.Row) {
-	if w.err != nil || row == nil {
-		return
+// Write writes a row of spanner to RecordWriter.
+// If it is first time to write, Write writes also a header before writing a row.
+// When second argument of NewWriter is false, the header would be omit.
+//
+// Example with csv.Writer:
+//	func query(ctx context.Context, w io.Writer, client *spanner.Client) error {
+//		stmt := spanner.Statement{SQL: `SELECT * FROM mytable`}
+//		iter := client.Single().Query(ctx, stmt)
+//		defer iter.Stop()
+//		cw := csv.NewWriter(w)
+//		hw := hake.NewWriter(cw, true)
+//		for {
+//			row, err := iter.Next()
+//			switch {
+//			case err == iterator.Done:
+//				return nil
+//			case err != nil:
+//				return err
+//			}
+//
+//			if err := hw.Write(row); err != nil {
+//				return err
+//			}
+//			cw.Flush()
+//		}
+//	}
+func (w *Writer) Write(row *spanner.Row) error {
+	if row == nil {
+		return nil
 	}
 
 	if err := w.validateTypes(row); err != nil {
-		w.err = err
-		return
+		return err
 	}
 
-	if err := w.w.Write(row.ColumnNames()); err != nil {
-		w.err = err
+	if w.header {
+		w.header = true
+		if err := w.writeHeader(row); err != nil {
+			return err
+		}
 	}
+
+	cols, err := Columns(row)
+	if err != nil {
+		return err
+	}
+
+	record := make([]string, len(cols))
+	for i := range cols {
+		v, err := w.value(cols[i])
+		if err != nil {
+			return err
+		}
+		record[i] = v
+	}
+
+	if err := w.w.Write(record); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (w *Writer) writeHeader(row *spanner.Row) error {
+	return w.w.Write(row.ColumnNames())
 }
 
 func (w *Writer) validateTypes(row *spanner.Row) error {
@@ -85,38 +124,6 @@ func (w *Writer) validateType(t *gspanner.Type) error {
 		return nil
 	}
 	return fmt.Errorf("unsupported type: %v", t)
-}
-
-// Write writes a row.
-func (w *Writer) Write(row *spanner.Row) {
-	if w.err != nil || row == nil {
-		return
-	}
-
-	if err := w.validateTypes(row); err != nil {
-		w.err = err
-		return
-	}
-
-	cols, err := Columns(row)
-	if err != nil {
-		w.err = err
-		return
-	}
-
-	record := make([]string, len(cols))
-	for i := range cols {
-		v, err := w.value(cols[i])
-		if err != nil {
-			w.err = err
-			return
-		}
-		record[i] = v
-	}
-
-	if err := w.w.Write(record); err != nil {
-		w.err = err
-	}
 }
 
 func (w *Writer) value(c *spanner.GenericColumnValue) (string, error) {
