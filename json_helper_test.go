@@ -3,6 +3,7 @@ package hake_test
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"testing"
 
 	"cloud.google.com/go/spanner"
@@ -38,7 +39,15 @@ func column(t *testing.T, v interface{}) *spanner.GenericColumnValue {
 }
 
 // R is Row.
-type R map[string]interface{}
+type R []interface{}
+
+func (r R) MarshalJSON() ([]byte, error) {
+	m := map[string]interface{}{}
+	for i := 0; i < len(r)-1; i += 2 {
+		m[fmt.Sprint(r[i])] = r[i+1]
+	}
+	return json.Marshal(m)
+}
 
 func row(t *testing.T, r R) *spanner.Row {
 	t.Helper()
@@ -49,9 +58,9 @@ func row(t *testing.T, r R) *spanner.Row {
 
 	names := make([]string, 0, len(r))
 	values := make([]interface{}, 0, len(r))
-	for n, v := range r {
-		names = append(names, n)
-		values = append(values, v)
+	for i := 0; i < len(r)-1; i += 2 {
+		names = append(names, fmt.Sprint(r[i]))
+		values = append(values, r[i+1])
 	}
 
 	rw, err := spanner.NewRow(names, values)
