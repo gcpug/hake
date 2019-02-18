@@ -3,3 +3,13 @@
 [godoc]: http://godoc.org/github.com/gcpug/hake
 
 Utiltiy for [GenericColumnValue](https://github.com/googleapis/google-cloud-go/blob/6878216cbdc8bc0a808e523cdbfd14f6509040dd/spanner/value.go#L166) which handles Query's Response generically.
+
+## Install
+
+```
+go get github.com/gcpug/hake
+```
+
+## Usage
+
+All usage are described in [GoDoc](http://godoc.org/github.com/gcpug/hake).
