@@ -18,8 +18,8 @@ func TestJSONRow_MarshalJSON(t *testing.T) {
 	}{
 		{"null", row(t, nil), toJSON(t, nil)},
 		{"empty", row(t, R{}), toJSON(t, R{})},
-		{"single", row(t, R{"col1": 100}), toJSON(t, R{"col1": 100})},
-		{"multiple", row(t, R{"col1": 100, "col2": 10.5}), toJSON(t, R{"col1": 100, "col2": 10.5})},
+		{"single", row(t, R{"col1", 100}), toJSON(t, R{"col1", 100})},
+		{"multiple", row(t, R{"col1", 100, "col2", 10.5}), toJSON(t, R{"col1", 100, "col2", 10.5})},
 	}
 
 	for _, tt := range cases {
@@ -42,7 +42,7 @@ func TestRows(t *testing.T) {
 	}{
 		{"null", rows(t, nil), toJSON(t, nil)},
 		{"empties", rows(t, []R{{}, {}}), toJSON(t, []R{{}, {}})},
-		{"singles", rows(t, []R{{"col1": 100}, {"col2": 10.5}}), toJSON(t, []R{{"col1": 100}, {"col2": 10.5}})},
+		{"singles", rows(t, []R{{"col1", 100}, {"col1", 200}}), toJSON(t, []R{{"col1", 100}, {"col1", 200}})},
 	}
 
 	for _, tt := range cases {
@@ -72,11 +72,11 @@ func TestJSONRow_Schema(t *testing.T) {
 		row   *spanner.Row
 		isErr bool
 	}{
-		{"int", row(t, R{"col1": 100}), false},
-		{"int string", row(t, R{"col1": 100, "col2": "string"}), false},
-		{"nested struct", row(t, R{"col1": 100, "col2": T{N: 100, S: ""}}), false},
-		{"timestamp", row(t, R{"col1": 100, "col2": timestamp(t, "2002-10-02T10:00:00Z")}), false},
-		{"bytes", row(t, R{"col1": []byte("test")}), false},
+		{"int", row(t, R{"col1", 100}), false},
+		{"int string", row(t, R{"col1", 100, "col2", "string"}), false},
+		{"nested struct", row(t, R{"col1", 100, "col2", T{N: 100, S: ""}}), false},
+		{"timestamp", row(t, R{"col1", 100, "col2", timestamp(t, "2002-10-02T10:00:00Z")}), false},
+		{"bytes", row(t, R{"col1", []byte("test")}), false},
 	}
 
 	for _, tt := range cases {
