@@ -1,4 +1,4 @@
-# hake [![Go Documentation](http://img.shields.io/badge/go-documentation-blue.svg?style=flat-square)][godoc] [![Go Report Card](https://goreportcard.com/badge/github.com/gcpug/hake)](https://goreportcard.com/report/github.com/gcpug/hake) [![codecov](https://codecov.io/gh/gcpug/hake/branch/master/graph/badge.svg)](https://codecov.io/gh/gcpug/hake)
+# gcpug/hake [![Go Documentation](http://img.shields.io/badge/go-documentation-blue.svg?style=flat-square)][godoc] [![Go Report Card](https://goreportcard.com/badge/github.com/gcpug/hake)](https://goreportcard.com/report/github.com/gcpug/hake) [![codecov](https://codecov.io/gh/gcpug/hake/branch/master/graph/badge.svg)](https://codecov.io/gh/gcpug/hake)
 
 [godoc]: http://godoc.org/github.com/gcpug/hake
 
