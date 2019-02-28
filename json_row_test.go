@@ -56,7 +56,18 @@ func TestRows(t *testing.T) {
 	}
 }
 
-func TestJSONRow_Schema(t *testing.T) {
+type noopFormatCheker struct{}
+
+func (noopFormatCheker) IsFormat(_ string) bool {
+	return true
+}
+
+func init() {
+	gojsonschema.FormatCheckers.Add("datetime", noopFormatCheker{})
+	gojsonschema.FormatCheckers.Add("textarea", noopFormatCheker{})
+}
+
+func TestJSONRow_JSONSchema(t *testing.T) {
 
 	type T struct {
 		N int
@@ -83,7 +94,7 @@ func TestJSONRow_Schema(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			var got bytes.Buffer
-			err := (*JSONRow)(tt.row).Schema(&got)
+			err := (*JSONRow)(tt.row).JSONSchema(&got)
 			switch {
 			case tt.isErr && err == nil:
 				t.Errorf("expected error does not occur")
