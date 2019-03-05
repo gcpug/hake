@@ -56,7 +56,18 @@ func TestRows(t *testing.T) {
 	}
 }
 
-func TestJSONRow_Schema(t *testing.T) {
+type noopFormatCheker struct{}
+
+func (noopFormatCheker) IsFormat(_ string) bool {
+	return true
+}
+
+func init() {
+	gojsonschema.FormatCheckers.Add("datetime", noopFormatCheker{})
+	gojsonschema.FormatCheckers.Add("textarea", noopFormatCheker{})
+}
+
+func TestJSONRow_JSONSchema(t *testing.T) {
 
 	type T struct {
 		N int
@@ -83,7 +94,7 @@ func TestJSONRow_Schema(t *testing.T) {
 		tt := tt
 		t.Run(tt.name, func(t *testing.T) {
 			var got bytes.Buffer
-			err := (*JSONRow)(tt.row).Schema(&got)
+			err := (*JSONRow)(tt.row).JSONSchema(&got)
 			switch {
 			case tt.isErr && err == nil:
 				t.Errorf("expected error does not occur")
@@ -98,6 +109,61 @@ func TestJSONRow_Schema(t *testing.T) {
 			}
 
 			rowJSON := toJSON(t, (*JSONRow)(tt.row))
+			r, err := s.Validate(gojsonschema.NewStringLoader(rowJSON))
+			if err != nil {
+				t.Fatalf("unexpected error %v", err)
+			}
+
+			if !r.Valid() {
+				t.Errorf("invalid JSON Schema: %s", got.String())
+			}
+		})
+	}
+}
+
+func TestJSONRows_JSONSchema(t *testing.T) {
+
+	type T struct {
+		N int
+		S string
+	}
+
+	type NT struct {
+		T T
+	}
+
+	cases := []struct {
+		name  string
+		rows  []*spanner.Row
+		isErr bool
+	}{
+		{"int", rows(t, []R{{"col1", 100}}), false},
+		{"int int", rows(t, []R{{"col1", 100}, {"col1", 200}}), false},
+		{"int string", rows(t, []R{{"col1", 100, "col2", "string"}}), false},
+		{"nested struct", rows(t, []R{{"col1", 100, "col2", T{N: 100, S: ""}}}), false},
+		{"timestamp", rows(t, []R{{"col1", 100, "col2", timestamp(t, "2002-10-02T10:00:00Z")}}), false},
+		{"bytes", rows(t, []R{{"col1", []byte("test")}}), false},
+	}
+
+	for _, tt := range cases {
+		tt := tt
+		t.Run(tt.name, func(t *testing.T) {
+			var got bytes.Buffer
+			err := JSONRows(tt.rows).JSONSchema(&got)
+			switch {
+			case tt.isErr && err == nil:
+				t.Errorf("expected error does not occur")
+			case !tt.isErr && err != nil:
+				t.Errorf("unexpected error %v", err)
+			}
+
+			l := gojsonschema.NewStringLoader(got.String())
+			s, err := gojsonschema.NewSchema(l)
+			if err != nil {
+				t.Fatalf("unexpected error %v", err)
+			}
+
+			rowJSON := toJSON(t, JSONRows(tt.rows))
 			r, err := s.Validate(gojsonschema.NewStringLoader(rowJSON))
 			if err != nil {
 				t.Fatalf("unexpected error %v", err)

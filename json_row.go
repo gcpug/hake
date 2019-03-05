@@ -7,7 +7,7 @@ import (
 	"path"
 
 	"cloud.google.com/go/spanner"
-	"github.com/minio/minio/pkg/wildcard"
+	"github.com/tenntenn/jsonschema"
 )
 
 // JSONRow is an encodable type of spanner.Row.
@@ -55,30 +55,8 @@ func (o *mapJSONObject) Ref() string {
 	return o.ref
 }
 
-// JSONSchemaOption is options for JSON Schema.
-type JSONSchemaOption func(o JSONObject) error
-
-// ByJSONReference explicits refrence of adding option.
-// It only supports refs which begins "#/".
-func ByJSONReference(pattern string, opt JSONSchemaOption) JSONSchemaOption {
-	return func(o JSONObject) error {
-		if wildcard.MatchSimple(pattern, o.Ref()) {
-			return opt(o)
-		}
-		return nil
-	}
-}
-
-// PropertyOrder is add propertyOrder to schema.
-func PropertyOrder(order int) JSONSchemaOption {
-	return func(o JSONObject) error {
-		o.Set("propertyOrder", order)
-		return nil
-	}
-}
-
 // Schema writes JSON Schema of the row to writer w.
-func (r *JSONRow) Schema(w io.Writer, options ...JSONSchemaOption) error {
+func (r *JSONRow) JSONSchema(w io.Writer, options ...jsonschema.Option) error {
 	type colSchema struct {
 		Name   string
 		Schema string
@@ -98,9 +76,9 @@ func (r *JSONRow) Schema(w io.Writer, options ...JSONSchemaOption) error {
 			ref: path.Join("#/properties", names[i]),
 		}
 
-		opts := make([]JSONSchemaOption, len(options)+1)
+		opts := make([]jsonschema.Option, len(options)+1)
 		copy(opts, options)
-		opts[len(opts)-1] = ByJSONReference(o.Ref(), PropertyOrder(i))
+		opts[len(opts)-1] = jsonschema.ByReference(o.Ref(), jsonschema.PropertyOrder(i))
 
 		if err := (*JSONColumn)(&col).schema(o, col.Type, opts...); err != nil {
 			return err
@@ -134,16 +112,35 @@ func (r *JSONRow) Schema(w io.Writer, options ...JSONSchemaOption) error {
 	return nil
 }
 
-// JSONRows convert []*spanner.Row to []*Row.
-func JSONRows(rows []*spanner.Row) []*JSONRow {
-	if rows == nil {
+// JSONRows is an encodable type of []*spanner.Row.
+type JSONRows []*spanner.Row
+
+var _ json.Marshaler = (JSONRows)(nil)
+
+// At returns ith row as *JSONRow.
+func (rs JSONRows) At(i int) *JSONRow {
+	return (*JSONRow)(rs[i])
+}
+
+func (rs JSONRows) toJSONRowSlice() []*JSONRow {
+	if rs == nil {
 		return nil
 	}
 
-	rs := make([]*JSONRow, len(rows))
-	for i := range rows {
-		rs[i] = (*JSONRow)(rows[i])
+	rows := make([]*JSONRow, len(rs))
+	for i := range rs {
+		rows[i] = rs.At(i)
 	}
 
-	return rs
+	return rows
+}
+
+// MarshalJSON implements json.Marshaler
+func (rs JSONRows) MarshalJSON() ([]byte, error) {
+	return json.Marshal(rs.toJSONRowSlice())
+}
+
+// Schema writes JSON Schema of the rows to writer w.
+func (rs JSONRows) JSONSchema(w io.Writer, options ...jsonschema.Option) error {
+	return jsonschema.Generate(w, rs.toJSONRowSlice(), options...)
 }

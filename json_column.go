@@ -10,6 +10,7 @@ import (
 	"cloud.google.com/go/civil"
 	"cloud.google.com/go/spanner"
 	structpb "github.com/golang/protobuf/ptypes/struct"
+	"github.com/tenntenn/jsonschema"
 	gspanner "google.golang.org/genproto/googleapis/spanner/v1"
 )
 
@@ -93,7 +94,7 @@ func (c *JSONColumn) marshalList(t *gspanner.Type, l *structpb.ListValue) ([]int
 	return vs, nil
 }
 
-func (c *JSONColumn) schema(o JSONObject, t *gspanner.Type, options ...JSONSchemaOption) error {
+func (c *JSONColumn) schema(o JSONObject, t *gspanner.Type, options ...jsonschema.Option) error {
 
 	switch t.Code {
 	default:
@@ -124,7 +125,9 @@ func (c *JSONColumn) schema(o JSONObject, t *gspanner.Type, options ...JSONSchem
 	}
 
 	for i := range options {
-		if err := (options[i])(o); err != nil {
+		var err error
+		o, err = (options[i])(o)
+		if err != nil {
 			return err
 		}
 	}
@@ -132,7 +135,7 @@ func (c *JSONColumn) schema(o JSONObject, t *gspanner.Type, options ...JSONSchem
 	return nil
 }
 
-func (c *JSONColumn) schemaStruct(parent JSONObject, t *gspanner.StructType, options ...JSONSchemaOption) error {
+func (c *JSONColumn) schemaStruct(parent JSONObject, t *gspanner.StructType, options ...jsonschema.Option) error {
 
 	required := make([]string, len(t.Fields))
 	properties := make(map[string]interface{}, len(t.Fields))
@@ -146,9 +149,9 @@ func (c *JSONColumn) schemaStruct(parent JSONObject, t *gspanner.StructType, opt
 			ref: path.Join(parent.Ref(), "properties", f.Name),
 		}
 
-		opts := make([]JSONSchemaOption, len(options)+1)
+		opts := make([]jsonschema.Option, len(options)+1)
 		copy(opts, options)
-		opts[len(opts)-1] = ByJSONReference(o.Ref(), PropertyOrder(i))
+		opts[len(opts)-1] = jsonschema.ByReference(o.Ref(), jsonschema.PropertyOrder(i))
 
 		if err := c.schema(o, f.Type, opts...); err != nil {
 			return err
@@ -164,7 +167,7 @@ func (c *JSONColumn) schemaStruct(parent JSONObject, t *gspanner.StructType, opt
 	return nil
 }
 
-func (c *JSONColumn) schemaArray(parent JSONObject, t *gspanner.Type, options ...JSONSchemaOption) error {
+func (c *JSONColumn) schemaArray(parent JSONObject, t *gspanner.Type, options ...jsonschema.Option) error {
 
 	o := &mapJSONObject{
 		m:   map[string]interface{}{},
