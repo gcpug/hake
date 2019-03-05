@@ -131,6 +131,7 @@ func (rs JSONRows) toJSONRowSlice() []*JSONRow {
 	for i := range rs {
 		rows[i] = rs.At(i)
 	}
+
 	return rows
 }
 
@@ -141,5 +142,5 @@ func (rs JSONRows) MarshalJSON() ([]byte, error) {
 
 // Schema writes JSON Schema of the rows to writer w.
 func (rs JSONRows) JSONSchema(w io.Writer, options ...jsonschema.Option) error {
-	return jsonschema.Generate(w, rs, options...)
+	return jsonschema.Generate(w, rs.toJSONRowSlice(), options...)
 }
