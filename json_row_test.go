@@ -58,7 +58,7 @@ func TestRows(t *testing.T) {
 
 type noopFormatCheker struct{}
 
-func (noopFormatCheker) IsFormat(_ string) bool {
+func (noopFormatCheker) IsFormat(_ interface{}) bool {
 	return true
 }
 
