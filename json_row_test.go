@@ -137,6 +137,7 @@ func TestJSONRows_JSONSchema(t *testing.T) {
 		rows  []*spanner.Row
 		isErr bool
 	}{
+		{"empty", rows(t, []R{}), false},
 		{"int", rows(t, []R{{"col1", 100}}), false},
 		{"int int", rows(t, []R{{"col1", 100}, {"col1", 200}}), false},
 		{"int string", rows(t, []R{{"col1", 100, "col2", "string"}}), false},
