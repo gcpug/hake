@@ -44,6 +44,7 @@ github.com/gopherjs/gopherjs v0.0.0-20181017120253-0766667cb4d1/go.mod h1:wJfORR
 github.com/gregjones/httpcache v0.0.0-20180305231024-9cad4c3443a7/go.mod h1:FecbI9+v66THATjSRHfNgh1IVFe/9kFxbXtjV0ctIMA=
 github.com/grpc-ecosystem/grpc-gateway v1.5.0/go.mod h1:RSKVYQBd5MCa4OVpNdGskqpgL2+G+NZTnrVHpWWfpdw=
 github.com/jellevandenhooff/dkim v0.0.0-20150330215556-f50fe3d243e1/go.mod h1:E0B/fFc00Y+Rasa88328GlI/XbtyysCtTHZS8h7IrBU=
+github.com/josephburnett/jd v0.0.0-20190531151850-1f9071c800e7/go.mod h1:aeV+6oc13ogwzcRNHBe4vbyLmoQxMfEDoqyqCU9oE30=
 github.com/kisielk/gotool v1.0.0/go.mod h1:XhKaO+MFFWcvkIS/tQcRk01m1F5IRFswLeQ+oQHNcck=
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
@@ -93,6 +94,10 @@ github.com/stretchr/testify v1.2.2/go.mod h1:a8OnRcib4nhh0OaRAV+Yts87kKdq0PP7pXf
 github.com/tarm/serial v0.0.0-20180830185346-98f6abe2eb07/go.mod h1:kDXzergiv9cbyO7IOYJZWg1U88JhDg3PB6klq9Hg2pA=
 github.com/tenntenn/jsonschema v0.0.1 h1:eIKG8Xiw3nWVILPd3UuGww88j80vGEbSSYNGdcIy89c=
 github.com/tenntenn/jsonschema v0.0.1/go.mod h1:1b70ZBDcPdpWbr6rkPPuwyY/Lc+t0zYP/p+3DBTS+M0=
+github.com/tenntenn/jsonschema v0.0.2 h1:cHuVvQpQSWhJy9A5GkZzawzJUKsctU8hkio8DtUQUO8=
+github.com/tenntenn/jsonschema v0.0.2/go.mod h1:1b70ZBDcPdpWbr6rkPPuwyY/Lc+t0zYP/p+3DBTS+M0=
+github.com/tenntenn/jsonschema v0.0.4 h1:J2o3dEfpmGpYe7YwKwg5p1tsJKy++/PQd2tPDOeYB8o=
+github.com/tenntenn/jsonschema v0.0.4/go.mod h1:BSs1+ManPR9PJSaKaawUi4x6wnAPtAK+PhtedJb7oTA=
 github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f h1:J9EGpcZtP0E/raorCMxlFGSTBrsSlaDGf3jU/qvAE2c=
 github.com/xeipuuv/gojsonpointer v0.0.0-20180127040702-4e3ac2762d5f/go.mod h1:N2zxlSyiKSe5eX1tZViRH5QA0qijqEDrYZiPEAiq3wU=
 github.com/xeipuuv/gojsonreference v0.0.0-20180127040603-bd5ef7bd5415 h1:EzJWgHovont7NscjpAxXsDA8S8BMYve8Y5+7cuRE7R0=
