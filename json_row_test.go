@@ -20,6 +20,7 @@ func TestJSONRow_MarshalJSON(t *testing.T) {
 		{"empty", row(t, R{}), toJSON(t, R{})},
 		{"single", row(t, R{"col1", 100}), toJSON(t, R{"col1", 100})},
 		{"multiple", row(t, R{"col1", 100, "col2", 10.5}), toJSON(t, R{"col1", 100, "col2", 10.5})},
+		{"duplicate column name", row(t, R{"col", "col"}), toJSON(t, R{"col", "col"})},
 	}
 
 	for _, tt := range cases {
@@ -43,6 +44,7 @@ func TestRows(t *testing.T) {
 		{"null", rows(t, nil), toJSON(t, nil)},
 		{"empties", rows(t, []R{{}, {}}), toJSON(t, []R{{}, {}})},
 		{"singles", rows(t, []R{{"col1", 100}, {"col1", 200}}), toJSON(t, []R{{"col1", 100}, {"col1", 200}})},
+		{"duplicate column name", rows(t, []R{{"col", "col"}}), toJSON(t, []R{{"col", "col"}})},
 	}
 
 	for _, tt := range cases {

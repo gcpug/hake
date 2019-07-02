@@ -34,6 +34,7 @@ func TestWriter_Write(t *testing.T) {
 		{"empty", row(t, R{}), []string{}, false},
 		{"single", row(t, R{"col1", 100}), []string{"100"}, false},
 		{"multiple", row(t, R{"col1", 100, "col2", 10.5}), []string{"100", "10.5"}, false},
+		{"duplicate column name", row(t, R{"col", 100, "col", 10.5}), []string{"100", "10.5"}, false},
 	}
 
 	for _, tt := range cases {
