@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"path"
-	"strconv"
 	"time"
 
 	"cloud.google.com/go/civil"
@@ -36,13 +35,20 @@ func (c *JSONColumn) marshal(t *gspanner.Type, v *structpb.Value) (interface{}, 
 	// See: https://godoc.org/google.golang.org/genproto/googleapis/spanner/v1#TypeCode
 	switch t.Code {
 	case gspanner.TypeCode_INT64:
-		s := v.GetStringValue()
-		n, err := strconv.ParseInt(s, 10, 64)
-		if err != nil {
-			return nil, err
-		}
-		return n, nil
+		// JavaScript's integral part is 53bit. see Number.MAX_SAFE_INTEGER.
+		return v.GetStringValue(), nil
 	case gspanner.TypeCode_FLOAT64:
+		s := v.GetStringValue()
+		switch s {
+		case "NaN", "Infinity", "-Infinity":
+			// NaN, Infinity, -Infinity will be null on JSON with JavaScript.
+			// http://www.ecma-international.org/ecma-262/10.0/index.html#sec-serializejsonproperty
+			return nil, nil
+		}
+		// golang:     https://golang.org/ref/spec#Numeric_types
+		// 		       float64     the set of all IEEE-754 64-bit floating-point numbers
+		// ECMAScript: http://www.ecma-international.org/ecma-262/10.0/index.html#sec-ecmascript-language-types-number-type
+		//             representing the double-precision 64-bit format IEEE 754-2008 values as specified in the IEEE Standard for Binary Floating-Point Arithmetic
 		return v.GetNumberValue(), nil
 	case gspanner.TypeCode_STRING:
 		return v.GetStringValue(), nil
@@ -99,7 +105,10 @@ func (c *JSONColumn) schema(o JSONObject, t *gspanner.Type, options ...jsonschem
 	switch t.Code {
 	default:
 		return fmt.Errorf("unsupport type: type:%v", t)
-	case gspanner.TypeCode_INT64, gspanner.TypeCode_FLOAT64:
+	case gspanner.TypeCode_INT64:
+		o.Set("type", "string")
+		o.Set("format", "int64")
+	case gspanner.TypeCode_FLOAT64:
 		o.Set("type", "number")
 	case gspanner.TypeCode_STRING:
 		o.Set("type", "string")
