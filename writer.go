@@ -20,8 +20,9 @@ var _ RecordWriter = (*csv.Writer)(nil)
 
 // Writer is writes *spanner.Row to Recordwriter.
 type Writer struct {
-	w      RecordWriter
-	header bool
+	w             RecordWriter
+	header        bool
+	writtenHeader bool
 }
 
 // NewWriter creates a Writer.
@@ -67,8 +68,8 @@ func (w *Writer) Write(row *spanner.Row) error {
 		return err
 	}
 
-	if w.header {
-		w.header = true
+	if w.header && !w.writtenHeader {
+		w.writtenHeader = true
 		if err := w.writeHeader(row); err != nil {
 			return err
 		}
