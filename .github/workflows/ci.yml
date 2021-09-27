@@ -4,6 +4,7 @@ on: [push]
 
 jobs:
   setup:
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/setup-go@v2
         with:
@@ -11,6 +12,7 @@ jobs:
       - uses: actions/checkout@v2
   test:
     needs: setup
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: test
