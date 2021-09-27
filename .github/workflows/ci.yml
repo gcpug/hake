@@ -1,0 +1,24 @@
+name: go-ci
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-go@v2
+        with:
+          go-version: '1.16'
+      - name: Cache go dependencies
+        uses: actions/cache@v2
+        id: cache
+        with:
+          key: ${{ runner.os }}-go-cache-r5-${{ hashFiles('**/go.mod') }}-${{ hashFiles('**/go.sum') }}
+          path: |-
+            ~/go/pkg/mod
+      - run: go test ./...
