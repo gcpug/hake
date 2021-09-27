@@ -1,6 +1,6 @@
 name: go-ci
 
-on: [push]
+on: [push, pull_request]
 
 jobs:
   setup:
